@@ -1,0 +1,401 @@
+{
+  "artists": {
+    "alan-jackson": {
+      "name": "Alan Jackson"
+    },
+    "bob-wills": {
+      "name": "Bob Wills"
+    },
+    "buck-owens": {
+      "name": "Buck Owens"
+    },
+    "charley-pride": {
+      "name": "Charley Pride"
+    },
+    "chris-stapleton": {
+      "name": "Chris Stapleton"
+    },
+    "david-allan-coe": {
+      "name": "David Allan Coe"
+    },
+    "dwight-yoakam": {
+      "name": "Dwight Yoakam"
+    },
+    "emmylou-harris": {
+      "name": "Emmylou Harris"
+    },
+    "eric-church": {
+      "name": "Eric Church"
+    },
+    "george-jones": {
+      "name": "George Jones"
+    },
+    "george-strait": {
+      "name": "George Strait"
+    },
+    "gram-parsons": {
+      "name": "Gram Parsons"
+    },
+    "hank-williams": {
+      "name": "Hank Williams"
+    },
+    "hank-williams-jr": {
+      "name": "Hank Williams Jr."
+    },
+    "jason-aldean": {
+      "name": "Jason Aldean"
+    },
+    "jimmie-rodgers": {
+      "name": "Jimmie Rodgers"
+    },
+    "johnny-cash": {
+      "name": "Johnny Cash"
+    },
+    "johnny-horton": {
+      "name": "Johnny Horton"
+    },
+    "kacey-musgraves": {
+      "name": "Kacey Musgraves"
+    },
+    "kris-kristofferson": {
+      "name": "Kris Kristofferson"
+    },
+    "lefty-frizzell": {
+      "name": "Lefty Frizzell"
+    },
+    "merle-haggard": {
+      "name": "Merle Haggard"
+    },
+    "midland": {
+      "name": "Midland"
+    },
+    "sturgill-simpson": {
+      "name": "Sturgill Simpson"
+    },
+    "taylor-swift": {
+      "name": "Taylor Swift"
+    },
+    "tim-mcgraw": {
+      "name": "Tim McGraw"
+    },
+    "tyler-childers": {
+      "name": "Tyler Childers"
+    },
+    "waylon-jennings": {
+      "name": "Waylon Jennings"
+    },
+    "willie-nelson": {
+      "name": "Willie Nelson"
+    },
+    "zach-bryan": {
+      "name": "Zach Bryan"
+    }
+  },
+  "refs": {
+    "cj9zuwc4x23slfj269uu": {
+      "createdAt": 1794500410149,
+      "from": "midland",
+      "kind": "namedrop",
+      "note": "\"You don't have to wait on Dwight, if you're trying to get right\"",
+      "title": "Every Song's a Drinkin' Song",
+      "to": "dwight-yoakam",
+      "year": 2019
+    },
+    "ndu5pabpx0tpog0wuklw": {
+      "createdAt": 1794500471951,
+      "from": "midland",
+      "kind": "namedrop",
+      "title": "Every Song's a Drinkin' Song",
+      "to": "hank-williams",
+      "year": 2019
+    },
+    "nnwjm2a6ntu4xiysc531": {
+      "createdAt": 1794500496176,
+      "from": "midland",
+      "kind": "namedrop",
+      "title": "Every Song's a Drinkin Song",
+      "to": "johnny-cash",
+      "year": 2019
+    },
+    "s01": {
+      "createdAt": 1001,
+      "from": "dwight-yoakam",
+      "kind": "duet",
+      "note": "Their duet version of Buck's 1973 album cut went to No. 1.",
+      "starter": true,
+      "title": "Streets of Bakersfield",
+      "to": "buck-owens",
+      "year": 1988
+    },
+    "s02": {
+      "createdAt": 1002,
+      "from": "dwight-yoakam",
+      "kind": "tribute",
+      "note": "A full album of Buck Owens songs, released the year after Buck died.",
+      "starter": true,
+      "title": "Dwight Sings Buck",
+      "to": "buck-owens",
+      "year": 2007
+    },
+    "s03": {
+      "createdAt": 1003,
+      "from": "dwight-yoakam",
+      "kind": "cover",
+      "starter": true,
+      "title": "Honky Tonk Man",
+      "to": "johnny-horton",
+      "year": 1986
+    },
+    "s04": {
+      "createdAt": 1030,
+      "from": "zach-bryan",
+      "kind": "influence",
+      "note": "From your example. Edit this to add the song, lyric or interview where it happens.",
+      "starter": true,
+      "to": "tyler-childers"
+    },
+    "s05": {
+      "createdAt": 1005,
+      "from": "zach-bryan",
+      "kind": "duet",
+      "starter": true,
+      "title": "I Remember Everything",
+      "to": "kacey-musgraves",
+      "year": 2023
+    },
+    "s06": {
+      "createdAt": 1006,
+      "from": "tyler-childers",
+      "kind": "duet",
+      "note": "Sturgill Simpson co-produced the album.",
+      "starter": true,
+      "title": "Purgatory",
+      "to": "sturgill-simpson",
+      "year": 2017
+    },
+    "s07": {
+      "createdAt": 1007,
+      "from": "waylon-jennings",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "Are You Sure Hank Done It This Way",
+      "to": "hank-williams",
+      "year": 1975
+    },
+    "s08": {
+      "createdAt": 1008,
+      "from": "waylon-jennings",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "Bob Wills Is Still the King",
+      "to": "bob-wills",
+      "year": 1975
+    },
+    "s09": {
+      "createdAt": 1009,
+      "from": "merle-haggard",
+      "kind": "tribute",
+      "starter": true,
+      "title": "A Tribute to the Best Damn Fiddle Player in the World",
+      "to": "bob-wills",
+      "year": 1970
+    },
+    "s10": {
+      "createdAt": 1010,
+      "from": "merle-haggard",
+      "kind": "tribute",
+      "starter": true,
+      "title": "Same Train, a Different Time",
+      "to": "jimmie-rodgers",
+      "year": 1969
+    },
+    "s11": {
+      "createdAt": 1011,
+      "from": "willie-nelson",
+      "kind": "tribute",
+      "starter": true,
+      "title": "To Lefty from Willie",
+      "to": "lefty-frizzell",
+      "year": 1977
+    },
+    "s12": {
+      "createdAt": 1012,
+      "from": "hank-williams-jr",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "Family Tradition",
+      "to": "hank-williams",
+      "year": 1979
+    },
+    "s13": {
+      "createdAt": 1013,
+      "from": "david-allan-coe",
+      "kind": "tribute",
+      "note": "A hitchhiker gets a lift from Hank's ghost.",
+      "starter": true,
+      "title": "The Ride",
+      "to": "hank-williams",
+      "year": 1983
+    },
+    "s14": {
+      "createdAt": 1014,
+      "from": "david-allan-coe",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "You Never Even Called Me by My Name",
+      "to": "waylon-jennings",
+      "year": 1975
+    },
+    "s15": {
+      "createdAt": 1015,
+      "from": "david-allan-coe",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "You Never Even Called Me by My Name",
+      "to": "merle-haggard",
+      "year": 1975
+    },
+    "s16": {
+      "createdAt": 1016,
+      "from": "david-allan-coe",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "You Never Even Called Me by My Name",
+      "to": "charley-pride",
+      "year": 1975
+    },
+    "s17": {
+      "createdAt": 1017,
+      "from": "alan-jackson",
+      "kind": "tribute",
+      "starter": true,
+      "title": "Midnight in Montgomery",
+      "to": "hank-williams",
+      "year": 1992
+    },
+    "s18": {
+      "createdAt": 1018,
+      "from": "george-strait",
+      "kind": "namedrop",
+      "note": "With Alan Jackson. The Hag \"wouldn't have a chance on today's radio.\"",
+      "starter": true,
+      "title": "Murder on Music Row",
+      "to": "merle-haggard",
+      "year": 2000
+    },
+    "s19": {
+      "createdAt": 1019,
+      "from": "george-strait",
+      "kind": "namedrop",
+      "note": "With Alan Jackson. Jones appears as the Possum.",
+      "starter": true,
+      "title": "Murder on Music Row",
+      "to": "george-jones",
+      "year": 2000
+    },
+    "s20": {
+      "createdAt": 1020,
+      "from": "george-strait",
+      "kind": "duet",
+      "starter": true,
+      "title": "Murder on Music Row",
+      "to": "alan-jackson",
+      "year": 2000
+    },
+    "s21": {
+      "createdAt": 1021,
+      "from": "george-jones",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "Who's Gonna Fill Their Shoes",
+      "to": "hank-williams",
+      "year": 1985
+    },
+    "s22": {
+      "createdAt": 1022,
+      "from": "george-jones",
+      "kind": "namedrop",
+      "note": "Referenced as the Red Headed Stranger.",
+      "starter": true,
+      "title": "Who's Gonna Fill Their Shoes",
+      "to": "willie-nelson",
+      "year": 1985
+    },
+    "s23": {
+      "createdAt": 1023,
+      "from": "george-jones",
+      "kind": "namedrop",
+      "note": "Referenced as the Man in Black.",
+      "starter": true,
+      "title": "Who's Gonna Fill Their Shoes",
+      "to": "johnny-cash",
+      "year": 1985
+    },
+    "s24": {
+      "createdAt": 1024,
+      "from": "eric-church",
+      "kind": "tribute",
+      "starter": true,
+      "title": "Pledge Allegiance to the Hag",
+      "to": "merle-haggard",
+      "year": 2006
+    },
+    "s25": {
+      "createdAt": 1025,
+      "from": "jason-aldean",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "Johnny Cash",
+      "to": "johnny-cash",
+      "year": 2007
+    },
+    "s26": {
+      "createdAt": 1026,
+      "from": "taylor-swift",
+      "kind": "namedrop",
+      "starter": true,
+      "title": "Tim McGraw",
+      "to": "tim-mcgraw",
+      "year": 2006
+    },
+    "s27": {
+      "createdAt": 1027,
+      "from": "chris-stapleton",
+      "kind": "cover",
+      "note": "Jones had the hit in 1983; David Allan Coe cut it first in 1981.",
+      "starter": true,
+      "title": "Tennessee Whiskey",
+      "to": "george-jones",
+      "year": 2015
+    },
+    "s28": {
+      "createdAt": 1028,
+      "from": "johnny-cash",
+      "kind": "cover",
+      "starter": true,
+      "title": "Sunday Mornin' Comin' Down",
+      "to": "kris-kristofferson",
+      "year": 1970
+    },
+    "s29": {
+      "createdAt": 1029,
+      "from": "emmylou-harris",
+      "kind": "tribute",
+      "starter": true,
+      "title": "Boulder to Birmingham",
+      "to": "gram-parsons",
+      "year": 1975
+    },
+    "s30": {
+      "createdAt": 1004,
+      "from": "kacey-musgraves",
+      "kind": "duet",
+      "note": "Hidden track on Pageant Material, a Willie Nelson song sung with Willie.",
+      "starter": true,
+      "title": "Are You Sure",
+      "to": "willie-nelson",
+      "year": 2015
+    }
+  },
+  "version": 1
+}

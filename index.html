@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A node-and-edge graph of who references whom in country music.">
+<title>Country Lineage</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a working tool. Slim header, the graph as the main stage, a side panel of
+   jukebox-style title strips for whatever is selected. Denim ground, topstitch gold accent. */
+:root {
+  --bg: #e8edf4; --surface: #f8fafd; --ink: #15233b; --muted: #55657e; --line: #c3cedd;
+  --accent: #9a6200; --accent-ink: #ffffff; --danger: #a8322a;
+  --k-namedrop: #a86b00; --k-cover: #b83a2e; --k-tribute: #6a49b5; --k-duet: #0d7a71; --k-influence: #46689a;
+  --display: "Alfa Slab One", "Rockwell", "Georgia", serif;
+  --body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1929; --surface: #17243a; --ink: #e7eef8; --muted: #95a6c0; --line: #2d3f5c;
+  --accent: #f0b94a; --accent-ink: #1a1405; --danger: #f08478;
+  --k-namedrop: #f0b94a; --k-cover: #f27d6f; --k-tribute: #b3a0f2; --k-duet: #4fcabd; --k-influence: #94b2e0;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f1929; --surface: #17243a; --ink: #e7eef8; --muted: #95a6c0; --line: #2d3f5c;
+  --accent: #f0b94a; --accent-ink: #1a1405; --danger: #f08478;
+  --k-namedrop: #f0b94a; --k-cover: #f27d6f; --k-tribute: #b3a0f2; --k-duet: #4fcabd; --k-influence: #94b2e0;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body);
+  padding-block: 20px 32px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.app { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px }
+button, input, select, textarea { font: inherit; color: inherit }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+/* header */
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 24px }
+.brand { flex: 1 1 260px; min-width: 0 }
+h1 { font: 400 clamp(26px, 4vw, 36px)/1.05 var(--display); margin: 0; letter-spacing: .01em; text-wrap: balance }
+.sub { margin: 4px 0 0; color: var(--muted); font-size: 14px }
+.sub b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.field { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; min-width: 0; width: 100% }
+#search { width: 200px }
+.btn { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 8px 14px; cursor: pointer; font-weight: 600 }
+.btn:hover { border-color: var(--ink) }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.btn.primary:hover { filter: brightness(1.08) }
+.btn.small { padding: 4px 10px; font-size: 13px }
+.btn.danger { color: var(--danger) }
+.btn[data-armed] { background: var(--danger); border-color: var(--danger); color: var(--surface) }
+.linkish { background: none; border: 0; padding: 0; cursor: pointer; font-weight: 600; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px }
+.linkish:hover { text-decoration-color: var(--accent) }
+#banner { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; background: var(--surface); border: 1px dashed var(--accent); border-radius: 4px; padding: 8px 12px; font-size: 14px }
+#status { color: var(--muted); font-size: 13px; min-height: 1.2em }
+
+/* legend / filter */
+.legend { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.legend-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: 4px }
+.chip { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; cursor: pointer; font-size: 13px; font-weight: 500 }
+.chip i { width: 18px; height: 0; border-top: 3px solid var(--kc) }
+.chip[aria-pressed="false"] { background: transparent; color: var(--muted); text-decoration: line-through }
+.chip[aria-pressed="false"] i { opacity: .35 }
+[data-kind="namedrop"] { --kc: var(--k-namedrop) } [data-kind="cover"] { --kc: var(--k-cover) }
+[data-kind="tribute"] { --kc: var(--k-tribute) } [data-kind="duet"] { --kc: var(--k-duet) }
+[data-kind="influence"] { --kc: var(--k-influence) }
+
+/* main */
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; align-items: start }
+.stage { position: relative; height: clamp(440px, 74vh, 820px); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+  background-image: radial-gradient(var(--line) 1px, transparent 1px); background-size: 22px 22px }
+#graph { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none }
+#graph:active { cursor: grabbing }
+.zoom { position: absolute; top: 10px; right: 10px; display: flex; gap: 4px }
+.zoom .btn { padding: 4px 10px; min-width: 34px }
+#stage-msg { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 24px; color: var(--muted); pointer-events: none }
+#stage-msg p { max-width: 34ch; margin: 0 }
+.caption { margin: 0; color: var(--muted); font-size: 13px }
+
+.link .line { fill: none; stroke: var(--kc); stroke-width: 1.8 }
+.link[data-kind="influence"] .line { stroke-dasharray: 5 4 }
+.link .hit { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer }
+.link:hover .line { stroke-width: 3.2 }
+.arr { fill: var(--kc) }
+.node { cursor: pointer }
+.node circle { fill: var(--surface); stroke: var(--ink); stroke-width: 1.8 }
+.node text { font: 500 11.5px var(--body); fill: var(--ink); text-anchor: middle; paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none }
+.node:hover circle, .node:focus-visible circle { stroke: var(--accent); stroke-width: 3 }
+.node:focus, .node:focus-visible { outline: none }
+.node.sel circle { fill: var(--accent); stroke: var(--accent) }
+.node.sel text { font-weight: 700 }
+.node, .link { transition: opacity .15s }
+.dim { opacity: .13 }
+@media (prefers-reduced-motion: reduce) { .node, .link { transition: none } }
+
+/* panel */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; max-height: clamp(440px, 74vh, 820px); overflow-y: auto; display: flex; flex-direction: column; gap: 14px; min-width: 0 }
+.panel h2 { font: 400 24px/1.1 var(--display); margin: 0; overflow-wrap: anywhere }
+.panel h3 { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 600 }
+.sec { display: flex; flex-direction: column; gap: 8px }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.muted { color: var(--muted); margin: 0; font-size: 14px }
+.counts { font-family: var(--mono); font-size: 13px; color: var(--muted); margin: 0 }
+
+.strip { border: 1px solid var(--line); border-top: 4px solid var(--kc); border-radius: 2px; padding: 8px 10px 9px; background: var(--bg); display: flex; flex-direction: column; gap: 3px; min-width: 0 }
+.strip-top { display: flex; justify-content: space-between; gap: 8px; font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--kc) }
+.strip-top .yr { color: var(--muted); font-variant-numeric: tabular-nums }
+.strip-title { font-weight: 700; overflow-wrap: anywhere }
+.strip-who { font-size: 14px; overflow-wrap: anywhere }
+.strip-who .arrow { color: var(--kc); font-weight: 700; padding: 0 2px }
+.strip-note { font-size: 13px; color: var(--muted); margin: 0; overflow-wrap: anywhere }
+.strip-acts { display: flex; gap: 6px; margin-top: 4px }
+
+.rank { display: grid; grid-template-columns: minmax(0, 1fr) 70px 22px; gap: 10px; align-items: center; background: none; border: 0; padding: 3px 0; cursor: pointer; text-align: left; width: 100% }
+.rank:hover .rank-name { text-decoration: underline; text-decoration-color: var(--accent) }
+.rank-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.rank-bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden }
+.rank-bar i { display: block; height: 100%; background: var(--accent) }
+.rank-n { font: 500 13px var(--mono); text-align: right; font-variant-numeric: tabular-nums }
+
+form.sec label { font-size: 13px; font-weight: 600; display: flex; flex-direction: column; gap: 4px }
+form.sec label span { font-weight: 400; color: var(--muted) }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px }
+.preview { font-size: 14px; border-left: 3px solid var(--kc); padding-left: 10px; margin: 0 }
+.error { color: var(--danger); font-size: 14px; margin: 0 }
+textarea.field { resize: vertical; min-height: 60px }
+
+@media (max-width: 860px) {
+  .main { grid-template-columns: minmax(0, 1fr) }
+  .stage { height: 440px }
+  .panel { max-height: none }
+  #search { width: 100%; flex: 1 1 140px }
+  .tools { width: 100% }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="head">
+    <div class="brand">
+      <h1>Country Lineage</h1>
+      <p class="sub" id="sub">Who references whom in country music</p>
+    </div>
+    <div class="tools">
+      <input class="field" id="search" type="search" list="artist-list" placeholder="Find an artist" aria-label="Find an artist" autocomplete="off">
+      <button class="btn primary" id="add-btn" type="button" data-act="new-ref">Add a reference</button>
+      <button class="btn" type="button" data-act="export">Export data</button>
+      <button class="btn" type="button" data-act="import">Import data</button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+    </div>
+  </header>
+  <div id="banner" hidden></div>
+  <div class="legend" id="legend" aria-label="Show or hide kinds of reference"></div>
+
+  <div class="main">
+    <div class="sec">
+      <div class="stage">
+        <svg id="graph" role="img" aria-label="Graph of artists and the references between them">
+          <defs id="defs"></defs>
+        </svg>
+        <div id="stage-msg"><p>Loading the graph…</p></div>
+        <div class="zoom">
+          <button class="btn" type="button" id="zoom-in" aria-label="Zoom in">+</button>
+          <button class="btn" type="button" id="zoom-out" aria-label="Zoom out">−</button>
+          <button class="btn" type="button" id="zoom-fit">Fit</button>
+        </div>
+      </div>
+      <p class="caption">Each arrow points from the artist making the reference to the artist being referenced. Bigger dots are referenced more often. Drag to rearrange, scroll or pinch to zoom, select a dot or an arrow for details.</p>
+      <div id="status" role="status" aria-live="polite"></div>
+    </div>
+    <aside class="panel" id="panel" aria-label="Details"><p class="muted">Loading saved references…</p></aside>
+  </div>
+  <datalist id="artist-list"></datalist>
+</div>
+
+<script src="vendor/d3.min.js"></script>
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const KINDS = {
+    namedrop: { label: 'Name-drop', verb: 'name-drops', hint: 'named in a lyric or title' },
+    cover: { label: 'Cover', verb: 'covers', hint: 'records their song' },
+    tribute: { label: 'Tribute', verb: 'pays tribute to', hint: 'a song or album in their honor' },
+    duet: { label: 'Duet / collab', verb: 'records with', hint: 'duet, guest spot or production' },
+    influence: { label: 'Influence', verb: 'cites', hint: 'named as an influence' }
+  };
+  const KIND_ORDER = Object.keys(KINDS);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const S = { artists: new Map(), refs: new Map(), sel: null, mode: 'browse', form: null, renaming: false,
+    hidden: new Set(), ready: false, canWrite: true };
+  let backend = null;
+
+  /* ---------- data helpers ---------- */
+  const nameOf = id => S.artists.get(id)?.name || 'Unknown artist';
+  const allRefs = () => [...S.refs].map(([id, r]) => ({ id, ...r }))
+    .filter(r => S.artists.has(r.from) && S.artists.has(r.to) && r.from !== r.to && KINDS[r.kind]);
+  const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+  const findArtist = name => { const n = name.trim().toLowerCase(); for (const [id, a] of S.artists) if ((a.name || '').toLowerCase() === n) return id; return null; };
+
+  async function ensureArtist(name) {
+    name = name.trim();
+    const found = findArtist(name);
+    if (found) return found;
+    let id = slug(name) || 'artist'; let i = 2; const base = id;
+    while (S.artists.has(id)) id = base + '-' + i++;
+    await backend.setArtist(id, { name });
+    if (!S.artists.has(id)) S.artists.set(id, { name });
+    return id;
+  }
+
+  function writeError(e) {
+    const c = e && e.code;
+    if (c === 'quota_exceeded') return 'Storage for this graph is full. Delete some entries, then try again.';
+        return 'That did not save. Check your connection and try again.';
+  }
+  let toastTimer;
+  function toast(msg) { $('#status').textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('#status').textContent = ''; }, 4000); }
+
+  /* ---------- storage ----------
+     data/graph.json in the repository is the published graph. Edits made in the browser are kept in
+     localStorage until they are exported and committed back to that file. */
+  const KEY = 'country-lineage-v2';
+  let published = null, fileData = null, base = null;
+  const sortDeep = v => Array.isArray(v) ? v.map(sortDeep)
+    : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, sortDeep(v[k])])) : v;
+  const canon = d => JSON.stringify(sortDeep({ version: 1, artists: d.artists || {}, refs: d.refs || {} }), null, 2) + '\n';
+  const current = () => ({ artists: Object.fromEntries(S.artists), refs: Object.fromEntries(S.refs) });
+  function setData(d) { S.artists = new Map(Object.entries(d.artists || {})); S.refs = new Map(Object.entries(d.refs || {})); }
+  function persist() {
+    try {
+      if (canon(current()) === published) { localStorage.removeItem(KEY); base = published; }
+      else localStorage.setItem(KEY, JSON.stringify({ base, ...current() }));
+    } catch (e) {}
+    updateBanner(); refresh();
+  }
+  function updateBanner() {
+    const b = $('#banner'), exp = '<button class="btn small" type="button" data-act="export">Export data</button>';
+    if (published === null) {
+      b.innerHTML = '<span>The published data file (data/graph.json) could not be loaded. You are seeing only what is saved in this browser.</span>' + exp;
+      b.hidden = false; return;
+    }
+    if (canon(current()) === published) { b.hidden = true; return; }
+    b.innerHTML = `<span>${base !== published ? 'The published graph has changed since you made these edits. ' : ''}You have changes saved in this browser only. To publish them, export the data and commit the file as data/graph.json.</span>${exp}
+      <button class="btn small danger" type="button" data-act="discard" data-label="Discard my changes">Discard my changes</button>`;
+    b.hidden = false;
+  }
+  function exportData() {
+    const url = URL.createObjectURL(new Blob([canon(current())], { type: 'application/json' }));
+    const a = document.createElement('a'); a.href = url; a.download = 'graph.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Downloaded graph.json. Commit it to the repository as data/graph.json to publish.');
+  }
+  async function importData(file) {
+    try {
+      const d = JSON.parse(await file.text());
+      if (!d || typeof d.artists !== 'object' || typeof d.refs !== 'object') throw new Error('shape');
+      setData(d); S.sel = null; S.mode = 'browse'; persist(); toast('Imported ' + file.name + '.');
+    } catch (e) { toast('That file is not a Country Lineage export. Choose a graph.json file.'); }
+  }
+  function localBackend() {
+    return {
+      setArtist: async (id, d) => { S.artists.set(id, d); persist(); },
+      delArtist: async id => { S.artists.delete(id); persist(); },
+      addRef: async d => { S.refs.set('r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), d); persist(); },
+      setRef: async (id, d) => { S.refs.set(id, d); persist(); },
+      delRef: async id => { S.refs.delete(id); persist(); }
+    };
+  }
+
+  /* ---------- graph ---------- */
+  const svg = d3.select('#graph');
+  $('#defs').innerHTML = KIND_ORDER.map(k =>
+    `<marker id="arr-${k}" data-kind="${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path class="arr" d="M0,0.5L10,5L0,9.5z"/></marker>`).join('');
+  const root = svg.append('g');
+  const linkG = root.append('g'), nodeG = root.append('g');
+  let nodes = [], links = [], nodeSel = nodeG.selectAll('g'), linkSel = linkG.selectAll('g'), firstLayout = true;
+
+  const sim = d3.forceSimulation()
+    .force('link', d3.forceLink().id(d => d.id).distance(95).strength(0.45))
+    .force('charge', d3.forceManyBody().strength(-420))
+    .force('x', d3.forceX().strength(0.07)).force('y', d3.forceY().strength(0.09))
+    .force('collide', d3.forceCollide().radius(d => d.r + 20))
+    .on('tick', draw).stop();
+
+  const zoom = d3.zoom().scaleExtent([0.25, 3]).on('zoom', e => root.attr('transform', e.transform));
+  svg.call(zoom).on('dblclick.zoom', null);
+  svg.on('click', e => { if (e.target === svg.node()) select(null); });
+
+  function updateGraph() {
+    const refs = allRefs();
+    const indeg = {}; refs.forEach(r => { indeg[r.to] = (indeg[r.to] || 0) + 1; });
+    const old = new Map(nodes.map(n => [n.id, n]));
+    nodes = [...S.artists].map(([id, a]) => {
+      const o = old.get(id) || { id, x: (Math.random() - 0.5) * 300, y: (Math.random() - 0.5) * 300 };
+      o.name = a.name || 'Unknown artist'; o.r = 7 + 3.2 * Math.sqrt(indeg[id] || 0); return o;
+    });
+    const groups = {};
+    links = refs.filter(r => !S.hidden.has(r.kind)).map(r => {
+      const pair = [r.from, r.to].sort(); const key = pair.join('|');
+      const l = { id: r.id, source: r.from, target: r.to, from: r.from, to: r.to, kind: r.kind, flip: r.from !== pair[0] };
+      (groups[key] = groups[key] || []).push(l); return l;
+    });
+    Object.values(groups).forEach(g => g.forEach((l, i) => { l.off = (i - (g.length - 1) / 2) * 22; }));
+
+    linkSel = linkG.selectAll('g.link').data(links, d => d.id).join(enter => {
+      const g = enter.append('g').attr('class', 'link');
+      g.append('path').attr('class', 'line'); g.append('path').attr('class', 'hit');
+      g.on('click', (e, d) => { e.stopPropagation(); select({ type: 'pair', a: d.from, b: d.to }); });
+      return g;
+    });
+    linkSel.attr('data-kind', d => d.kind).select('.line').attr('marker-end', d => `url(#arr-${d.kind})`);
+
+    nodeSel = nodeG.selectAll('g.node').data(nodes, d => d.id).join(enter => {
+      const g = enter.append('g').attr('class', 'node').attr('tabindex', 0).attr('role', 'button');
+      g.append('circle'); g.append('text');
+      g.on('click', (e, d) => { e.stopPropagation(); select({ type: 'artist', id: d.id }); })
+       .on('keydown', (e, d) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select({ type: 'artist', id: d.id }); } })
+       .call(d3.drag()
+         .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.25).restart(); d.fx = d.x; d.fy = d.y; })
+         .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+         .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+      return g;
+    });
+    nodeSel.attr('aria-label', d => d.name);
+    nodeSel.select('circle').attr('r', d => d.r);
+    nodeSel.select('text').text(d => d.name).attr('y', d => d.r + 14);
+
+    sim.nodes(nodes); sim.force('link').links(links);
+    if (firstLayout && nodes.length) {
+      sim.alpha(1).tick(320); draw(); fit(false); firstLayout = false;
+    } else if (reduceMotion) { sim.alpha(0.5).tick(140); draw(); }
+    else sim.alpha(0.45).restart();
+    applySel();
+    const msg = $('#stage-msg');
+    msg.hidden = S.ready && nodes.length > 0;
+    if (S.ready && !nodes.length) msg.firstElementChild.textContent = S.canWrite
+      ? 'No artists yet. Add a reference and the two artists it connects will appear here.'
+      : 'No artists have been added to this graph yet.';
+  }
+
+  function draw() {
+    linkSel.each(function (d) {
+      const s = d.source, t = d.target; if (typeof s !== 'object' || typeof t !== 'object') return;
+      const dx = t.x - s.x, dy = t.y - s.y, len = Math.hypot(dx, dy) || 1;
+      let nx = -dy / len, ny = dx / len; if (d.flip) { nx = -nx; ny = -ny; }
+      const cx = (s.x + t.x) / 2 + nx * d.off * 2, cy = (s.y + t.y) / 2 + ny * d.off * 2;
+      const a = Math.hypot(cx - s.x, cy - s.y) || 1, b = Math.hypot(cx - t.x, cy - t.y) || 1;
+      const sx = s.x + (cx - s.x) / a * s.r, sy = s.y + (cy - s.y) / a * s.r;
+      const ex = t.x + (cx - t.x) / b * (t.r + 3), ey = t.y + (cy - t.y) / b * (t.r + 3);
+      const p = `M${sx.toFixed(1)},${sy.toFixed(1)}Q${cx.toFixed(1)},${cy.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`;
+      d3.select(this).selectAll('path').attr('d', p);
+    });
+    nodeSel.attr('transform', d => `translate(${d.x.toFixed(1)},${d.y.toFixed(1)})`);
+  }
+
+  function size() { const r = svg.node().getBoundingClientRect(); return [r.width || 800, r.height || 500]; }
+  function move(t, animate) { (animate && !reduceMotion ? svg.transition().duration(350) : svg).call(zoom.transform, t); }
+  function fit(animate) {
+    if (!nodes.length) return;
+    const [w, h] = size();
+    const x0 = d3.min(nodes, d => d.x - d.r), x1 = d3.max(nodes, d => d.x + d.r);
+    const y0 = d3.min(nodes, d => d.y - d.r), y1 = d3.max(nodes, d => d.y + d.r + 18);
+    const k = Math.min(w / (x1 - x0 + 110), h / (y1 - y0 + 70), 1.5);
+    move(d3.zoomIdentity.translate(w / 2, h / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2), animate);
+  }
+  function centerOn(id) {
+    const n = nodes.find(d => d.id === id); if (!n) return;
+    const [w, h] = size(); const k = Math.max(d3.zoomTransform(svg.node()).k, 0.9);
+    move(d3.zoomIdentity.translate(w / 2, h / 2).scale(k).translate(-n.x, -n.y), true);
+  }
+  $('#zoom-in').onclick = () => svg.call(zoom.scaleBy, 1.3);
+  $('#zoom-out').onclick = () => svg.call(zoom.scaleBy, 1 / 1.3);
+  $('#zoom-fit').onclick = () => fit(true);
+
+  function applySel() {
+    const sel = S.sel; let keepN = null, keepL = null;
+    if (sel && sel.type === 'artist') {
+      keepN = new Set([sel.id]); keepL = new Set();
+      links.forEach(l => { if (l.from === sel.id || l.to === sel.id) { keepL.add(l.id); keepN.add(l.from); keepN.add(l.to); } });
+    } else if (sel && sel.type === 'pair') {
+      keepN = new Set([sel.a, sel.b]);
+      keepL = new Set(links.filter(l => keepN.has(l.from) && keepN.has(l.to)).map(l => l.id));
+    }
+    nodeSel.classed('dim', d => !!keepN && !keepN.has(d.id)).classed('sel', d => !!sel && sel.type === 'artist' && d.id === sel.id);
+    linkSel.classed('dim', d => !!keepL && !keepL.has(d.id));
+  }
+
+  function select(sel, center) {
+    S.sel = sel; S.mode = 'browse'; S.renaming = false;
+    applySel(); renderPanel();
+    if (center && sel && sel.type === 'artist') centerOn(sel.id);
+  }
+
+  /* ---------- panel ---------- */
+  const artistBtn = id => `<button class="linkish" type="button" data-act="artist" data-id="${esc(id)}">${esc(nameOf(id))}</button>`;
+  function strip(r) {
+    const k = KINDS[r.kind];
+    return `<article class="strip" data-kind="${r.kind}">
+      <div class="strip-top"><span>${esc(k.label)}${r.starter ? ' · starter' : ''}</span><span class="yr">${r.year ? esc(r.year) : ''}</span></div>
+      ${r.title ? `<div class="strip-title">${esc(r.title)}</div>` : ''}
+      <div class="strip-who">${artistBtn(r.from)} <span class="arrow" aria-label="${esc(k.verb)}">→</span> ${artistBtn(r.to)}</div>
+      ${r.note ? `<p class="strip-note">${esc(r.note)}</p>` : ''}
+      ${S.canWrite ? `<div class="strip-acts"><button class="btn small" type="button" data-act="edit-ref" data-id="${esc(r.id)}">Edit</button>
+        <button class="btn small danger" type="button" data-act="del-ref" data-id="${esc(r.id)}">Delete</button></div>` : ''}
+    </article>`;
+  }
+  const byYear = (a, b) => (a.year || 9999) - (b.year || 9999);
+
+  function renderPanel() {
+    const p = $('#panel');
+    if (!S.ready) return;
+    if (S.mode === 'form') return renderForm(p);
+    if (S.sel && S.sel.type === 'artist' && S.artists.has(S.sel.id)) return renderArtist(p, S.sel.id);
+    if (S.sel && S.sel.type === 'pair' && S.artists.has(S.sel.a) && S.artists.has(S.sel.b)) return renderPair(p, S.sel);
+    renderOverview(p);
+  }
+
+  function renderOverview(p) {
+    const refs = allRefs();
+    if (!refs.length) {
+      p.innerHTML = `<h2>Start the graph</h2><p class="muted">Every entry is one reference: the artist who made it, the artist it points to, and where it happens. ${S.canWrite ? 'Add the first one to put two artists on the map.' : ''}</p>
+        ${S.canWrite ? '<div><button class="btn primary" type="button" data-act="new-ref">Add a reference</button></div>' : ''}`;
+      return;
+    }
+    const indeg = {}; refs.forEach(r => { indeg[r.to] = (indeg[r.to] || 0) + 1; });
+    const top = Object.entries(indeg).sort((a, b) => b[1] - a[1] || nameOf(a[0]).localeCompare(nameOf(b[0]))).slice(0, 8);
+    const max = top[0][1];
+    const latest = refs.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 4);
+    p.innerHTML = `<h2>Most referenced</h2>
+      <div class="sec">${top.map(([id, n]) => `<button class="rank" type="button" data-act="artist" data-id="${esc(id)}">
+        <span class="rank-name">${esc(nameOf(id))}</span><span class="rank-bar"><i style="width:${Math.round(n / max * 100)}%"></i></span><span class="rank-n">${n}</span></button>`).join('')}</div>
+      <div class="sec"><h3>Latest entries</h3>${latest.map(strip).join('')}</div>`;
+  }
+
+  function roots(id, refs) {
+    const out = {}; refs.forEach(r => { (out[r.from] = out[r.from] || []).push(r.to); });
+    const seen = new Set([id]); let frontier = [id]; const levels = [];
+    for (let depth = 1; depth <= 4 && frontier.length; depth++) {
+      const next = [];
+      frontier.forEach(a => (out[a] || []).forEach(b => { if (!seen.has(b)) { seen.add(b); next.push(b); } }));
+      if (depth >= 2 && next.length) levels.push({ depth, ids: next });
+      frontier = next;
+    }
+    return levels;
+  }
+
+  function renderArtist(p, id) {
+    const refs = allRefs();
+    const out = refs.filter(r => r.from === id).sort(byYear), inc = refs.filter(r => r.to === id).sort(byYear);
+    const lv = roots(id, refs); const words = { 2: 'Two', 3: 'Three', 4: 'Four' };
+    p.innerHTML = `<div><button class="linkish" type="button" data-act="back">← All artists</button></div>
+      ${S.renaming
+        ? `<form class="sec" id="rename-form"><label for="rename-input">Artist name<input class="field" id="rename-input" value="${esc(nameOf(id))}" maxlength="120" required></label>
+            <div class="row"><button class="btn primary small" type="submit">Save name</button><button class="btn small" type="button" data-act="cancel-rename">Cancel</button></div></form>`
+        : `<h2>${esc(nameOf(id))}</h2>`}
+      <p class="counts">referenced by ${inc.length} · references ${out.length}</p>
+      ${S.canWrite && !S.renaming ? `<div class="row">
+        <button class="btn primary small" type="button" data-act="new-ref" data-from="${esc(id)}">Add a reference from them</button>
+        <button class="btn small" type="button" data-act="new-ref" data-to="${esc(id)}">Add one to them</button>
+        <button class="btn small" type="button" data-act="rename">Rename</button>
+        <button class="btn small danger" type="button" data-act="del-artist" data-id="${esc(id)}">Remove</button></div>` : ''}
+      <div class="sec"><h3>References</h3>${out.length ? out.map(strip).join('') : '<p class="muted">Nothing logged yet.</p>'}</div>
+      <div class="sec"><h3>Referenced by</h3>${inc.length ? inc.map(strip).join('') : '<p class="muted">Nobody yet.</p>'}</div>
+      ${lv.length ? `<div class="sec"><h3>Further back the line</h3>${lv.map(l =>
+        `<p class="muted"><b>${words[l.depth]} steps back:</b> ${l.ids.map(artistBtn).join(', ')}</p>`).join('')}</div>` : ''}`;
+    if (S.renaming) $('#rename-input').focus();
+  }
+
+  function renderPair(p, sel) {
+    const refs = allRefs().filter(r => (r.from === sel.a && r.to === sel.b) || (r.from === sel.b && r.to === sel.a)).sort(byYear);
+    p.innerHTML = `<div><button class="linkish" type="button" data-act="back">← All artists</button></div>
+      <h2>${esc(nameOf(sel.a))} &amp; ${esc(nameOf(sel.b))}</h2>
+      <p class="counts">${refs.length} reference${refs.length === 1 ? '' : 's'} between them</p>
+      <div class="sec">${refs.map(strip).join('') || '<p class="muted">No references between these two.</p>'}</div>`;
+  }
+
+  function renderForm(p) {
+    const f = S.form;
+    p.innerHTML = `<h2>${f.id ? 'Edit reference' : 'Add a reference'}</h2>
+      <form class="sec" id="ref-form" novalidate>
+        <label for="f-from">Who makes the reference<input class="field" id="f-from" list="artist-list" value="${esc(f.from)}" maxlength="120" autocomplete="off" placeholder="Dwight Yoakam"></label>
+        <label for="f-kind">Kind<select class="field" id="f-kind">${KIND_ORDER.map(k => `<option value="${k}"${k === f.kind ? ' selected' : ''}>${esc(KINDS[k].label)} (${esc(KINDS[k].hint)})</option>`).join('')}</select></label>
+        <label for="f-to">Who is referenced<input class="field" id="f-to" list="artist-list" value="${esc(f.to)}" maxlength="120" autocomplete="off" placeholder="Buck Owens"></label>
+        <div class="two">
+          <label for="f-title">Song or album <span>optional</span><input class="field" id="f-title" value="${esc(f.title)}" maxlength="200"></label>
+          <label for="f-year">Year <span>optional</span><input class="field" id="f-year" inputmode="numeric" value="${esc(f.year)}" maxlength="4"></label>
+        </div>
+        <label for="f-note">Note <span>the lyric, the story, a source. Optional</span><textarea class="field" id="f-note" maxlength="1000">${esc(f.note)}</textarea></label>
+        <p class="preview" id="f-preview" data-kind="${f.kind}"></p>
+        <p class="error" id="f-error" ${f.error ? '' : 'hidden'}>${esc(f.error || '')}</p>
+        <div class="row"><button class="btn primary" type="submit" id="f-save">Save reference</button><button class="btn" type="button" data-act="cancel-form">Cancel</button></div>
+        <p class="muted">New names are added to the graph as artists when you save.</p>
+      </form>`;
+    syncPreview();
+  }
+  function readForm() {
+    const f = S.form; if (!f || !$('#ref-form')) return f;
+    f.from = $('#f-from').value; f.to = $('#f-to').value; f.kind = $('#f-kind').value;
+    f.title = $('#f-title').value; f.year = $('#f-year').value; f.note = $('#f-note').value; return f;
+  }
+  function syncPreview() {
+    const f = readForm(); const el = $('#f-preview'); if (!el) return;
+    el.dataset.kind = f.kind;
+    el.textContent = `${f.from.trim() || 'Someone'} ${KINDS[f.kind].verb} ${f.to.trim() || 'someone'}${f.title.trim() ? ' on ' + f.title.trim() : ''}.`;
+  }
+  function openForm(init) {
+    if (!S.canWrite) return;
+    S.form = Object.assign({ id: null, from: '', to: '', kind: 'namedrop', title: '', year: '', note: '', error: '' }, init);
+    S.mode = 'form'; renderPanel();
+    const first = $(S.form.from ? (S.form.to ? '#f-title' : '#f-to') : '#f-from'); if (first) first.focus();
+    $('#panel').scrollIntoView({ block: 'nearest', behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+  async function saveForm() {
+    const f = readForm(); const fail = m => { f.error = m; const e = $('#f-error'); e.textContent = m; e.hidden = false; };
+    const from = f.from.trim(), to = f.to.trim(), yr = f.year.trim();
+    if (!from || !to) return fail('Name both artists: who makes the reference and who is referenced.');
+    if (from.toLowerCase() === to.toLowerCase()) return fail('The two artists need to be different people.');
+    if (yr && !/^(1[89]|20)\d\d$/.test(yr)) return fail('Use a four-digit year, like 1975, or leave it blank.');
+    const btn = $('#f-save'); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const a = await ensureArtist(from), b = await ensureArtist(to);
+      const data = { from: a, to: b, kind: f.kind, createdAt: (f.id && S.refs.get(f.id)?.createdAt) || Date.now() };
+      if (f.title.trim()) data.title = f.title.trim();
+      if (yr) data.year = +yr;
+      if (f.note.trim()) data.note = f.note.trim();
+      if (f.id) await backend.setRef(f.id, data); else await backend.addRef(data);
+      S.mode = 'browse'; S.sel = { type: 'artist', id: a }; toast('Reference saved.'); refresh();
+    } catch (e) { btn.disabled = false; btn.textContent = 'Save reference'; fail(writeError(e)); }
+  }
+
+  /* ---------- events ---------- */
+  function armed(btn, label) {
+    if (btn.dataset.armed) return true;
+    const orig = btn.textContent; btn.dataset.armed = '1'; btn.textContent = label;
+    setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = orig; } }, 4000);
+    return false;
+  }
+  document.addEventListener('click', async e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const act = el.dataset.act, id = el.dataset.id;
+    if (act === 'artist') select({ type: 'artist', id }, true);
+    else if (act === 'back') select(null);
+    else if (act === 'new-ref') openForm({ from: el.dataset.from ? nameOf(el.dataset.from) : '', to: el.dataset.to ? nameOf(el.dataset.to) : '' });
+    else if (act === 'edit-ref') { const r = S.refs.get(id); if (r) openForm({ id, from: nameOf(r.from), to: nameOf(r.to), kind: r.kind, title: r.title || '', year: r.year || '', note: r.note || '' }); }
+    else if (act === 'cancel-form') { S.mode = 'browse'; renderPanel(); }
+    else if (act === 'rename') { S.renaming = true; renderPanel(); }
+    else if (act === 'cancel-rename') { S.renaming = false; renderPanel(); }
+    else if (act === 'del-ref') {
+      if (!armed(el, 'Confirm delete')) return;
+      try { await backend.delRef(id); toast('Reference deleted.'); } catch (err) { toast(writeError(err)); }
+    } else if (act === 'del-artist') {
+      const touching = [...S.refs].filter(([, r]) => r.from === id || r.to === id).map(([rid]) => rid);
+      if (!armed(el, touching.length ? `Confirm: remove with ${touching.length} reference${touching.length === 1 ? '' : 's'}` : 'Confirm remove')) return;
+      try { for (const rid of touching) await backend.delRef(rid); await backend.delArtist(id); S.sel = null; toast('Artist removed.'); refresh(); }
+      catch (err) { toast(writeError(err)); }
+    } else if (act === 'export') exportData();
+    else if (act === 'import') $('#import-file').click();
+    else if (act === 'discard') {
+      if (!armed(el, 'Confirm: discard my changes')) return;
+      setData(fileData || {}); S.sel = null; S.mode = 'browse'; persist(); toast('Back to the published graph.');
+    } else if (act === 'kind') {
+      const k = el.dataset.kind; S.hidden.has(k) ? S.hidden.delete(k) : S.hidden.add(k);
+      el.setAttribute('aria-pressed', String(!S.hidden.has(k))); updateGraph();
+    }
+  });
+  document.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (e.target.id === 'ref-form') saveForm();
+    else if (e.target.id === 'rename-form') {
+      const id = S.sel && S.sel.id, name = $('#rename-input').value.trim(); if (!id || !name) return;
+      const clash = findArtist(name);
+      if (clash && clash !== id) { toast(`${name} is already on the graph.`); return; }
+      try { await backend.setArtist(id, { ...S.artists.get(id), name }); S.renaming = false; toast('Name saved.'); refresh(); }
+      catch (err) { toast(writeError(err)); }
+    }
+  });
+  document.addEventListener('input', e => { if (e.target.closest('#ref-form')) syncPreview(); });
+  $('#import-file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importData(f); });
+  const search = $('#search');
+  function runSearch() {
+    const q = search.value.trim(); if (!q) return;
+    let id = findArtist(q);
+    if (!id) { const m = [...S.artists].filter(([, a]) => (a.name || '').toLowerCase().includes(q.toLowerCase())); if (m.length) id = m[0][0]; }
+    if (id) { select({ type: 'artist', id }, true); search.value = ''; } else toast(`No artist matching "${q}" yet.`);
+  }
+  search.addEventListener('change', runSearch);
+  search.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runSearch(); } });
+
+  /* ---------- render all ---------- */
+  $('#legend').innerHTML = '<span class="legend-label">Show</span>' + KIND_ORDER.map(k =>
+    `<button class="chip" type="button" data-act="kind" data-kind="${k}" aria-pressed="true" title="${esc(KINDS[k].hint)}"><i></i>${esc(KINDS[k].label)}</button>`).join('');
+
+  function refresh() {
+    if (!S.ready) return;
+    const names = [...S.artists.values()].map(a => a.name || '').sort((a, b) => a.localeCompare(b));
+    $('#artist-list').innerHTML = names.map(n => `<option value="${esc(n)}"></option>`).join('');
+    const nRefs = allRefs().length;
+    $('#sub').innerHTML = S.artists.size
+      ? `<b>${S.artists.size}</b> artist${S.artists.size === 1 ? '' : 's'} · <b>${nRefs}</b> reference${nRefs === 1 ? '' : 's'} in country music`
+      : 'Who references whom in country music';
+    $('#add-btn').hidden = !S.canWrite;
+    updateGraph();
+    if (S.mode !== 'form') renderPanel();
+  }
+  async function boot() {
+    backend = localBackend();
+    try { const r = await fetch('data/graph.json', { cache: 'no-cache' }); if (r.ok) fileData = await r.json(); } catch (e) {}
+    published = fileData ? canon(fileData) : null;
+    let local = null;
+    try { local = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    const useLocal = local && typeof local.artists === 'object' && canon(local) !== published;
+    base = useLocal && local.base ? local.base : published;
+    setData(useLocal ? local : (fileData || {}));
+    S.ready = true; updateBanner(); refresh();
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
